@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Course Outcome Achievement Analyzer | Universal Marks Analyzer</title>
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Marked for Markdown rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          },
+          colors: {
+            brand: {
+              50: '#f0fdfa',
+              100: '#ccfbf1',
+              500: '#14b8a6',
+              600: '#0d9488',
+              700: '#0f766e',
+              800: '#115e59',
+              900: '#134e4a',
+            },
+            navy: {
+              800: '#1e293b',
+              900: '#0f172a',
+              950: '#020617',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Smooth scroll and transitions */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f8fafc; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+    .dropzone-active {
+      border-color: #0d9488 !important;
+      background-color: #f0fdfa !important;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased font-sans min-h-screen flex flex-col selection:bg-teal-500 selection:text-white relative">
+
+  <!-- FULL-SCREEN DRAG & DROP OVERLAY (Appears when dragging any file into the window) -->
+  <div id="globalDropOverlay" class="fixed inset-0 bg-navy-950/80 backdrop-blur-sm z-[100] flex flex-col items-center justify-center text-white pointer-events-none opacity-0 transition-opacity duration-200">
+    <div class="p-8 sm:p-10 rounded-3xl bg-navy-900 border-2 border-dashed border-teal-400 text-center shadow-2xl max-w-md mx-4 transform scale-95 transition-transform duration-200" id="overlayCard">
+      <div class="w-20 h-20 rounded-2xl bg-teal-500/20 text-teal-300 flex items-center justify-center mx-auto mb-4 border border-teal-400/40">
+        <i data-lucide="upload-cloud" class="w-10 h-10"></i>
+      </div>
+      <h3 class="text-xl font-bold text-white mb-1">Drop Any Dataset Here</h3>
+      <p class="text-xs text-slate-300">Drop PDF, Excel (.xlsx, .xls), CSV, or TSV anywhere</p>
+      <div class="mt-4 px-3 py-1.5 rounded-full bg-teal-500/10 text-teal-300 border border-teal-500/20 text-[11px] font-mono">
+        Instant Automatic OBE Attainment Calculation
+      </div>
+    </div>
+  </div>
+
+  <!-- TOP HEADER (Clean, Minimal, Professional) -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-9 h-9 rounded-xl bg-teal-600 text-white flex items-center justify-center shadow-md shadow-teal-600/20">
+          <i data-lucide="award" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <h1 class="text-base font-bold text-navy-950 tracking-tight">Course Outcome Analyzer</h1>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-teal-50 text-teal-700 border border-teal-200">
+              NBA / NAAC Ready
+            </span>
+          </div>
+          <p class="text-xs text-slate-500">Drag & drop any dataset &bull; Instant minimal analysis</p>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-2">
+        <a id="btnExportCsv" href="/api/export/csv" download class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-navy-900 hover:bg-slate-100 transition border border-slate-200">
+          <i data-lucide="download" class="w-3.5 h-3.5 text-teal-600"></i>
+          <span>Download CSV</span>
+        </a>
+        <a id="btnExportReport" href="/api/export/report" download class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-teal-600 hover:bg-teal-700 text-white transition shadow-sm">
+          <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+          <span>Official Report</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="max-w-6xl mx-auto px-4 sm:px-6 py-6 w-full flex-1 flex flex-col space-y-6">
+
+    <!-- UNIVERSAL UPLOAD ZONE (PROMINENT, SIMPLE & CLEAN) -->
+    <section class="bg-white rounded-2xl p-6 border-2 border-dashed border-slate-300 hover:border-teal-500 transition-all shadow-sm"
+      id="uploadDropzone">
+      
+      <input type="file" id="fileInput" accept=".pdf,.csv,.xlsx,.xls,.txt,.tsv" onchange="handleFileSelected(this.files[0])" class="hidden">
+      
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-5 text-center sm:text-left">
+        <div class="flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-4">
+          <div class="w-14 h-14 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center flex-shrink-0 cursor-pointer border border-teal-100 transition hover:scale-105 active:scale-95" onclick="document.getElementById('fileInput').click()">
+            <i data-lucide="upload-cloud" class="w-7 h-7"></i>
+          </div>
+          <div>
+            <h2 class="text-base font-bold text-navy-900">Drag & Drop Any Dataset (PDF, Excel, CSV)</h2>
+            <p class="text-xs text-slate-500 mt-0.5 max-w-xl">
+              Drag and drop any file anywhere on this window. We automatically detect student scores and calculate Course & Program Outcome attainment.
+            </p>
+            <div class="flex items-center justify-center sm:justify-start space-x-2 mt-2 text-[11px] text-slate-400 font-medium">
+              <span class="inline-flex items-center space-x-1"><i data-lucide="file-text" class="w-3 h-3 text-rose-500"></i><span>PDF Scorecard</span></span>
+              <span>&bull;</span>
+              <span class="inline-flex items-center space-x-1"><i data-lucide="file-spreadsheet" class="w-3 h-3 text-emerald-600"></i><span>Excel Sheets (.xlsx/.xls)</span></span>
+              <span>&bull;</span>
+              <span class="inline-flex items-center space-x-1"><i data-lucide="file" class="w-3 h-3 text-blue-500"></i><span>CSV / TSV</span></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-center gap-2 flex-shrink-0">
+          <button onclick="document.getElementById('fileInput').click()" class="px-4 py-2.5 rounded-xl font-bold text-xs bg-navy-900 hover:bg-navy-800 text-white transition shadow-sm flex items-center space-x-1.5 active:scale-95">
+            <i data-lucide="folder-open" class="w-4 h-4 text-teal-400"></i>
+            <span>Browse File</span>
+          </button>
+          <button onclick="regenerateData()" class="px-3.5 py-2.5 rounded-xl font-medium text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center space-x-1">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-teal-600"></i>
+            <span>Demo Data</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick sample datasets bar for instant testing -->
+      <div class="mt-4 pt-3 border-t border-slate-100 flex flex-wrap items-center gap-2 text-xs">
+        <span class="text-slate-400 text-[11px] font-medium mr-1">Try Sample File:</span>
+        <button onclick="loadSamplePreset('sample_gradebook.xlsx')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-teal-50 text-slate-700 hover:text-teal-800 border border-slate-200 hover:border-teal-300 font-medium transition text-[11px] flex items-center space-x-1">
+          <i data-lucide="file-spreadsheet" class="w-3 h-3 text-emerald-600"></i>
+          <span>Excel Gradebook (.xlsx)</span>
+        </button>
+        <button onclick="loadSamplePreset('exam_scores.pdf')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-teal-50 text-slate-700 hover:text-teal-800 border border-slate-200 hover:border-teal-300 font-medium transition text-[11px] flex items-center space-x-1">
+          <i data-lucide="file-text" class="w-3 h-3 text-rose-500"></i>
+          <span>PDF Exam Scores (.pdf)</span>
+        </button>
+        <button onclick="regenerateData()" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-teal-50 text-slate-700 hover:text-teal-800 border border-slate-200 hover:border-teal-300 font-medium transition text-[11px] flex items-center space-x-1">
+          <i data-lucide="file" class="w-3 h-3 text-blue-500"></i>
+          <span>CSV Benchmarks (60 Students)</span>
+        </button>
+      </div>
+
+      <!-- Current File Info Badge (Shows when loaded) -->
+      <div id="fileStatusBadge" class="mt-3 flex flex-col sm:flex-row sm:items-center justify-between text-xs text-slate-600 bg-teal-50/60 rounded-xl px-3.5 py-2 border border-teal-100">
+        <div class="flex items-center space-x-2">
+          <i data-lucide="check-circle-2" class="w-4 h-4 text-teal-600 flex-shrink-0"></i>
+          <span id="fileStatusText">Currently analyzing: <strong>Sample Benchmark Cohort (60 Students, 1200 records)</strong></span>
+        </div>
+        <span class="text-[11px] text-teal-700 font-mono mt-1 sm:mt-0 font-medium" id="fileProcessedMeta">Status: Live Recalculation Active</span>
+      </div>
+    </section>
+
+    <!-- SIMPLE 4 KPI CARDS (AT-A-GLANCE INSIGHTS) -->
+    <section class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <!-- 1. Overall Attainment -->
+      <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Overall Attainment</span>
+          <div class="p-1.5 rounded-lg bg-teal-50 text-teal-600">
+            <i data-lucide="pie-chart" class="w-4 h-4"></i>
+          </div>
+        </div>
+        <div class="my-2 flex items-baseline space-x-2">
+          <span id="kpiOverall" class="text-3xl font-extrabold text-navy-950 font-mono">--%</span>
+          <span id="kpiOverallBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">Calculating</span>
+        </div>
+        <p class="text-xs text-slate-400">Target Benchmark: <strong id="kpiTargetVal" class="text-slate-600">60%</strong></p>
+      </div>
+
+      <!-- 2. Strongest Outcome -->
+      <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Top Performing</span>
+          <div class="p-1.5 rounded-lg bg-emerald-50 text-emerald-600">
+            <i data-lucide="check-circle" class="w-4 h-4"></i>
+          </div>
+        </div>
+        <div class="my-2 flex items-baseline space-x-2">
+          <span id="kpiTopCo" class="text-2xl font-extrabold text-emerald-700 font-mono">CO1</span>
+          <span id="kpiTopVal" class="text-xs font-bold text-slate-600">89.1%</span>
+        </div>
+        <p class="text-xs text-slate-400">Solid conceptual mastery</p>
+      </div>
+
+      <!-- 3. Weakest Outcome (Needs Attention) -->
+      <div class="bg-white rounded-2xl p-5 border border-rose-200 bg-rose-50/20 shadow-sm flex flex-col justify-between">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold text-rose-700 uppercase tracking-wider">Needs Attention</span>
+          <div class="p-1.5 rounded-lg bg-rose-100 text-rose-700">
+            <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+          </div>
+        </div>
+        <div class="my-2 flex items-baseline space-x-2">
+          <span id="kpiWeakCo" class="text-2xl font-extrabold text-rose-700 font-mono">CO3</span>
+          <span id="kpiWeakVal" class="text-xs font-bold text-rose-700">49.9% (-10.1%)</span>
+        </div>
+        <p class="text-xs text-rose-600 font-medium">Critical deficit under benchmark</p>
+      </div>
+
+      <!-- 4. Students Needing Help -->
+      <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">At-Risk Students</span>
+          <div class="p-1.5 rounded-lg bg-amber-50 text-amber-700">
+            <i data-lucide="users" class="w-4 h-4"></i>
+          </div>
+        </div>
+        <div class="my-2 flex items-baseline space-x-2">
+          <span id="kpiAtRisk" class="text-3xl font-extrabold text-navy-900 font-mono">--</span>
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">Action Required</span>
+        </div>
+        <p class="text-xs text-slate-400">Scoring under threshold in &ge;2 COs</p>
+      </div>
+    </section>
+
+    <!-- CLEAN TABS: SIMPLIFIED & INTUITIVE -->
+    <div class="border-b border-slate-200">
+      <nav class="flex space-x-3 overflow-x-auto text-xs sm:text-sm font-semibold">
+        <button onclick="switchTab('overview')" id="tab-overview" class="tab-btn active py-3 px-3.5 border-b-2 border-teal-600 text-teal-600 flex items-center space-x-1.5">
+          <i data-lucide="bar-chart-2" class="w-4 h-4"></i>
+          <span>Attainment Chart & Matrix</span>
+        </button>
+        <button onclick="switchTab('action')" id="tab-action" class="tab-btn py-3 px-3.5 border-b-2 border-transparent text-slate-500 hover:text-slate-700 flex items-center space-x-1.5">
+          <i data-lucide="lightbulb" class="w-4 h-4"></i>
+          <span>Simple Action Plan</span>
+        </button>
+        <button onclick="switchTab('students')" id="tab-students" class="tab-btn py-3 px-3.5 border-b-2 border-transparent text-slate-500 hover:text-slate-700 flex items-center space-x-1.5">
+          <i data-lucide="user-x" class="w-4 h-4"></i>
+          <span>Students Needing Support (<span id="tabStudentCount">0</span>)</span>
+        </button>
+        <button onclick="switchTab('chat')" id="tab-chat" class="tab-btn py-3 px-3.5 border-b-2 border-transparent text-slate-500 hover:text-slate-700 flex items-center space-x-1.5">
+          <i data-lucide="message-square" class="w-4 h-4"></i>
+          <span>Ask Questions (AI)</span>
+        </button>
+      </nav>
+    </div>
+
+    <!-- TAB 1: OVERVIEW (CLEAN BAR CHART & CO-PO MATRIX) -->
+    <div id="panel-overview" class="tab-panel space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Main Attainment Chart -->
+        <div class="lg:col-span-8 bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div>
+                <h3 class="text-sm font-bold text-navy-950 flex items-center space-x-1.5">
+                  <i data-lucide="bar-chart-3" class="w-4 h-4 text-teal-600"></i>
+                  <span>Outcome Attainment vs Target</span>
+                </h3>
+                <p class="text-xs text-slate-400">Green = Meeting Target (60%) &bull; Red = Under Target</p>
+              </div>
+              <div class="flex items-center space-x-2 text-xs">
+                <span class="text-slate-400">Threshold:</span>
+                <span id="simpleThBadge" class="font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded">60%</span>
+              </div>
+            </div>
+            <div class="h-64 sm:h-72 mt-4 relative">
+              <canvas id="coBarChart"></canvas>
+            </div>
+          </div>
+          <!-- Simple result cards below chart -->
+          <div class="pt-4 border-t border-slate-100 grid grid-cols-5 gap-2 text-center text-xs" id="coPillSummary">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <!-- Quick Parameter Adjustment Panel -->
+        <div class="lg:col-span-4 bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between space-y-4">
+          <div>
+            <h3 class="text-sm font-bold text-navy-900 pb-2 border-b border-slate-100 flex items-center space-x-1.5">
+              <i data-lucide="sliders" class="w-4 h-4 text-teal-600"></i>
+              <span>Live Adjustments</span>
+            </h3>
+            <p class="text-xs text-slate-500 mt-2">Adjust benchmark sliders to see how your cohort responds in real-time:</p>
+            
+            <div class="mt-4 space-y-4 text-xs">
+              <div>
+                <div class="flex justify-between font-medium mb-1">
+                  <span class="text-slate-700">Passing Mark Threshold:</span>
+                  <span id="sliderThLabel" class="font-bold text-teal-700">60%</span>
+                </div>
+                <input type="range" id="simpleThSlider" min="40" max="80" value="60" oninput="updateTh(this.value)"
+                  class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-teal-600">
+              </div>
+
+              <div>
+                <div class="flex justify-between font-medium mb-1">
+                  <span class="text-slate-700">Target Benchmark:</span>
+                  <span id="sliderTgLabel" class="font-bold text-teal-700">60%</span>
+                </div>
+                <input type="range" id="simpleTgSlider" min="40" max="80" value="60" oninput="updateTg(this.value)"
+                  class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-teal-600">
+              </div>
+
+              <div>
+                <div class="flex justify-between font-medium mb-1">
+                  <span class="text-slate-700">Direct / Survey Weight:</span>
+                  <span id="sliderWtLabel" class="font-bold text-teal-700">80% / 20%</span>
+                </div>
+                <input type="range" id="simpleWtSlider" min="50" max="95" step="5" value="80" oninput="updateWt(this.value)"
+                  class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-teal-600">
+              </div>
+            </div>
+          </div>
+
+          <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-600">
+            <span class="font-bold text-navy-900 flex items-center space-x-1 mb-1">
+              <i data-lucide="info" class="w-3.5 h-3.5 text-teal-600"></i>
+              <span>How it works:</span>
+            </span>
+            Direct exam scores are calculated as the percentage of students scoring &ge; threshold in that outcome.
+          </div>
+        </div>
+      </div>
+
+      <!-- CO-PO Correlation Grid (Minimal, Clean Heatmap) -->
+      <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div>
+            <h3 class="text-sm font-bold text-navy-900 flex items-center space-x-1.5">
+              <i data-lucide="grid" class="w-4 h-4 text-teal-600"></i>
+              <span>CO-PO Mapping & Program Outcomes Roll-Up</span>
+            </h3>
+            <p class="text-xs text-slate-400">Strength correlation (3=High, 2=Medium, 1=Low) mapped into Program Outcomes PO1-PO6.</p>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto mt-4">
+          <table class="w-full text-xs text-left border-collapse" id="matrixTable">
+            <thead>
+              <tr class="bg-slate-50 text-slate-700 font-semibold border-b border-slate-200">
+                <th class="py-2.5 px-3">Outcome</th>
+                <th class="py-2.5 px-3 text-center">Score %</th>
+                <th class="py-2.5 px-3 text-center">Level</th>
+                <th class="py-2.5 px-3 text-center">PO1</th>
+                <th class="py-2.5 px-3 text-center">PO2</th>
+                <th class="py-2.5 px-3 text-center">PO3</th>
+                <th class="py-2.5 px-3 text-center">PO4</th>
+                <th class="py-2.5 px-3 text-center">PO5</th>
+                <th class="py-2.5 px-3 text-center">PO6</th>
+              </tr>
+            </thead>
+            <tbody id="matrixTableBody" class="divide-y divide-slate-100"></tbody>
+            <tfoot id="matrixTableFoot" class="bg-slate-50 font-bold border-t-2 border-slate-200"></tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: SIMPLE ACTION PLAN (WHAT TO DO NEXT) -->
+    <div id="panel-action" class="tab-panel hidden space-y-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="text-sm font-bold text-navy-900">Faculty Remediation Roadmap</h3>
+          <p class="text-xs text-slate-500">Straightforward steps to improve student performance where it matters most.</p>
+        </div>
+        <button id="btnAiReport" onclick="generateAiReport()" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-teal-600 hover:bg-teal-700 text-white transition flex items-center space-x-1.5 shadow-sm">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+          <span>Synthesize 1-Page Report</span>
+        </button>
+      </div>
+
+      <!-- Generated Report Container -->
+      <div id="aiReportBox" class="hidden bg-white rounded-2xl p-6 border-2 border-teal-500/40 shadow-md">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <h4 class="text-sm font-bold text-navy-900 flex items-center space-x-1.5">
+            <i data-lucide="file-check" class="w-4 h-4 text-teal-600"></i>
+            <span>Executive Evaluation Report</span>
+          </h4>
+          <button onclick="document.getElementById('aiReportBox').classList.add('hidden')" class="text-slate-400 hover:text-slate-600">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+        <div id="reportContent" class="mt-4 prose prose-sm max-w-none text-slate-700 text-xs sm:text-sm leading-relaxed"></div>
+      </div>
+
+      <!-- Per-CO Action Cards -->
+      <div class="space-y-4" id="actionCardsContainer">
+        <!-- Dynamically injected -->
+      </div>
+    </div>
+
+    <!-- TAB 3: STUDENTS NEEDING SUPPORT -->
+    <div id="panel-students" class="tab-panel hidden space-y-4">
+      <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+          <div>
+            <h3 class="text-sm font-bold text-navy-900">Students Flagged for Support</h3>
+            <p class="text-xs text-slate-400">Students who scored under threshold in multiple course outcomes.</p>
+          </div>
+          <div class="relative">
+            <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400"></i>
+            <input type="text" id="studentSearch" onkeyup="filterStudents()" placeholder="Search student name or roll..."
+              class="pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500 w-48 sm:w-64">
+          </div>
+        </div>
+
+        <div class="overflow-x-auto mt-3">
+          <table class="w-full text-xs text-left border-collapse" id="studentsTable">
+            <thead>
+              <tr class="bg-slate-50 text-slate-700 font-semibold border-b border-slate-200">
+                <th class="py-2.5 px-3">Student Name</th>
+                <th class="py-2.5 px-3">Roll No</th>
+                <th class="py-2.5 px-3 text-center">Weak Outcomes</th>
+                <th class="py-2.5 px-3">Needs Help In</th>
+                <th class="py-2.5 px-3 text-right">Average Score</th>
+                <th class="py-2.5 px-3 text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody id="studentsTableBody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: ASK QUESTIONS (AI ASSISTANT) -->
+    <div id="panel-chat" class="tab-panel hidden space-y-4">
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[520px] overflow-hidden">
+        <!-- Assistant Top Bar -->
+        <div class="p-3.5 bg-slate-900 text-white flex items-center justify-between">
+          <div class="flex items-center space-x-2.5">
+            <div class="w-7 h-7 rounded-lg bg-teal-500 text-navy-950 flex items-center justify-center font-bold">
+              <i data-lucide="bot" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <h4 class="text-xs font-bold leading-tight">Faculty AI Assistant</h4>
+              <p class="text-[10px] text-teal-300">Ask anything about your uploaded file or marks</p>
+            </div>
+          </div>
+          <button onclick="clearChat()" class="text-[11px] text-slate-400 hover:text-white">Clear</button>
+        </div>
+
+        <!-- Quick Prompts Bar -->
+        <div class="px-3.5 py-2 bg-slate-50 border-b border-slate-200 flex items-center space-x-2 overflow-x-auto text-xs">
+          <span class="text-slate-400 text-[11px] whitespace-nowrap">Examples:</span>
+          <button onclick="sendQuickPrompt('Which CO is weakest?')" class="px-2.5 py-1 rounded-full bg-white border border-slate-200 hover:border-teal-500 text-slate-700 whitespace-nowrap transition">
+            Which CO is weakest?
+          </button>
+          <button onclick="sendQuickPrompt('Who needs help in CO3?')" class="px-2.5 py-1 rounded-full bg-white border border-slate-200 hover:border-teal-500 text-slate-700 whitespace-nowrap transition">
+            Who needs help in CO3?
+          </button>
+          <button onclick="sendQuickPrompt('What should I do to fix CO3?')" class="px-2.5 py-1 rounded-full bg-white border border-slate-200 hover:border-teal-500 text-slate-700 whitespace-nowrap transition">
+            How to fix CO3?
+          </button>
+        </div>
+
+        <!-- Chat Scroll Area -->
+        <div id="chatMessages" class="flex-1 p-4 overflow-y-auto space-y-3 bg-slate-50/50 text-xs sm:text-sm">
+          <div class="flex items-start space-x-2.5">
+            <div class="w-6 h-6 rounded-full bg-teal-600 text-white flex-shrink-0 flex items-center justify-center text-[10px] font-bold">AI</div>
+            <div class="bg-white border border-slate-200 rounded-xl rounded-tl-none p-3 shadow-sm max-w-lg text-slate-700 leading-relaxed text-xs">
+              Hello! Your marks dataset is loaded. Ask me questions like <em>"Which outcome is lowest?"</em> or <em>"Who failed CO3?"</em>.
+            </div>
+          </div>
+        </div>
+
+        <!-- Chat Input -->
+        <div class="p-3 bg-white border-t border-slate-200">
+          <form onsubmit="handleChatSubmit(event)" class="flex items-center space-x-2">
+            <input type="text" id="chatInput" placeholder="Ask a question about the uploaded marks..."
+              class="flex-1 px-3.5 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-teal-500 text-slate-800">
+            <button type="submit" class="px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-semibold text-xs sm:text-sm transition flex items-center space-x-1">
+              <span>Ask</span>
+              <i data-lucide="send" class="w-3.5 h-3.5"></i>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-navy-950 text-white px-4 py-2.5 rounded-xl shadow-xl border border-slate-800 flex items-center space-x-2 text-xs">
+    <i data-lucide="check-circle" class="w-4 h-4 text-teal-400"></i>
+    <span id="toastMsg">Action completed successfully</span>
+  </div>
+
+  <!-- JAVASCRIPT APPLICATION LOGIC -->
+  <script>
+    let state = {
+      threshold: 60,
+      target: 60,
+      w_direct: 0.8,
+      currentTab: 'overview',
+      studentsList: [],
+      attainmentData: [],
+      poData: {},
+      summaryData: {}
+    };
+
+    let coBarChart = null;
+    let debounceTimer = null;
+
+    document.addEventListener("DOMContentLoaded", () => {
+      lucide.createIcons();
+      initGlobalDragDrop();
+      refreshAll();
+    });
+
+    // Global Drag & Drop anywhere on screen
+    function initGlobalDragDrop() {
+      let dragCounter = 0;
+      const overlay = document.getElementById("globalDropOverlay");
+      const card = document.getElementById("overlayCard");
+
+      window.addEventListener("dragenter", (e) => {
+        e.preventDefault();
+        dragCounter++;
+        if (overlay) {
+          overlay.classList.remove("opacity-0", "pointer-events-none");
+          overlay.classList.add("opacity-100");
+          if (card) card.classList.replace("scale-95", "scale-100");
+        }
+      });
+
+      window.addEventListener("dragleave", (e) => {
+        e.preventDefault();
+        dragCounter--;
+        if (dragCounter <= 0) {
+          dragCounter = 0;
+          if (overlay) {
+            overlay.classList.add("opacity-0", "pointer-events-none");
+            overlay.classList.remove("opacity-100");
+            if (card) card.classList.replace("scale-100", "scale-95");
+          }
+        }
+      });
+
+      window.addEventListener("dragover", (e) => {
+        e.preventDefault();
+      });
+
+      window.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dragCounter = 0;
+        if (overlay) {
+          overlay.classList.add("opacity-0", "pointer-events-none");
+          overlay.classList.remove("opacity-100");
+          if (card) card.classList.replace("scale-100", "scale-95");
+        }
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+          handleFileSelected(e.dataTransfer.files[0]);
+        }
+      });
+    }
+
+    // Load sample preset files
+    async function loadSamplePreset(filename) {
+      const statusText = document.getElementById("fileStatusText");
+      const metaText = document.getElementById("fileProcessedMeta");
+      statusText.innerHTML = `Loading preset: <strong>${filename}</strong>...`;
+      metaText.textContent = "Extracting records...";
+
+      try {
+        const resp = await fetch(`/api/sample/${filename}`);
+        if (!resp.ok) throw new Error("Preset file not found on server");
+        const blob = await resp.blob();
+        const file = new File([blob], filename, { type: blob.type });
+        await handleFileSelected(file);
+      } catch (err) {
+        console.warn("Falling back to demo dataset:", err);
+        await regenerateData();
+      }
+    }
+
+    // Upload handler (PDF, CSV, Excel)
+    async function handleFileSelected(file) {
+      if (!file) return;
+      const statusText = document.getElementById("fileStatusText");
+      const metaText = document.getElementById("fileProcessedMeta");
+
+      statusText.innerHTML = `Uploading & parsing <strong>${file.name}</strong>...`;
+      metaText.textContent = "Extracting records...";
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const res = await fetch(`/api/upload?threshold=${state.threshold}&target=${state.target}&w_direct=${state.w_direct}`, {
+          method: 'POST',
+          body: formData
+        }).then(r => r.json());
+
+        if (res.success) {
+          statusText.innerHTML = `Active file: <strong>${res.filename}</strong> &bull; ${res.info}`;
+          metaText.textContent = `${res.total_students} students analyzed`;
+          showToast(`Successfully analyzed ${file.name}`);
+          await refreshAll();
+        } else {
+          showToast("Could not parse file properly.");
+        }
+      } catch (err) {
+        console.error("Upload error:", err);
+        showToast("Error uploading file.");
+      }
+    }
+
+    // Slider updates
+    function updateTh(val) {
+      state.threshold = parseFloat(val);
+      document.getElementById("sliderThLabel").textContent = val + "%";
+      document.getElementById("simpleThBadge").textContent = val + "%";
+      triggerDebouncedRefresh();
+    }
+    function updateTg(val) {
+      state.target = parseFloat(val);
+      document.getElementById("sliderTgLabel").textContent = val + "%";
+      document.getElementById("kpiTargetVal").textContent = val + "%";
+      triggerDebouncedRefresh();
+    }
+    function updateWt(val) {
+      state.w_direct = parseFloat(val) / 100.0;
+      const indir = Math.round((1.0 - state.w_direct) * 100);
+      document.getElementById("sliderWtLabel").textContent = val + "% / " + indir + "%";
+      triggerDebouncedRefresh();
+    }
+
+    function triggerDebouncedRefresh() {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => { refreshAll(); }, 300);
+    }
+
+    function switchTab(tabName) {
+      state.currentTab = tabName;
+      document.querySelectorAll(".tab-btn").forEach(btn => {
+        btn.classList.remove("active", "border-teal-600", "text-teal-600");
+        btn.classList.add("border-transparent", "text-slate-500");
+      });
+      document.querySelectorAll(".tab-panel").forEach(p => p.classList.add("hidden"));
+
+      const activeBtn = document.getElementById(`tab-${tabName}`);
+      const activePanel = document.getElementById(`panel-${tabName}`);
+      if (activeBtn) {
+        activeBtn.classList.add("active", "border-teal-600", "text-teal-600");
+        activeBtn.classList.remove("border-transparent", "text-slate-500");
+      }
+      if (activePanel) activePanel.classList.remove("hidden");
+
+      if (tabName === 'overview') renderCoChart();
+      else if (tabName === 'action') loadActionPlan();
+      lucide.createIcons();
+    }
+
+    // Refresh all data
+    async function refreshAll() {
+      const q = `threshold=${state.threshold}&target=${state.target}&w_direct=${state.w_direct}`;
+      try {
+        const [sumRes, attRes, poRes, atRiskRes] = await Promise.all([
+          fetch(`/api/summary?${q}`).then(r => r.json()),
+          fetch(`/api/attainment?${q}`).then(r => r.json()),
+          fetch(`/api/po?${q}`).then(r => r.json()),
+          fetch(`/api/at-risk?threshold=${state.threshold}&min_cos=2`).then(r => r.json())
+        ]);
+
+        state.summaryData = sumRes;
+        state.attainmentData = attRes;
+        state.poData = poRes;
+        state.studentsList = atRiskRes.students || [];
+
+        updateKPIs(sumRes, attRes);
+        renderCoChart();
+        renderHeatmap(poRes, attRes);
+        renderStudentsTable();
+        loadActionPlan();
+      } catch (err) {
+        console.error("Refresh error:", err);
+      }
+    }
+
+    function updateKPIs(summary, attainment) {
+      document.getElementById("kpiOverall").textContent = summary.overall_attainment + "%";
+      const overallBadge = document.getElementById("kpiOverallBadge");
+      if (summary.overall_attainment >= state.target) {
+        overallBadge.textContent = "Good / On Track";
+        overallBadge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800";
+      } else {
+        overallBadge.textContent = "Needs Attention";
+        overallBadge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-800";
+      }
+
+      if (attainment && attainment.length) {
+        const top = [...attainment].sort((a,b) => b.final_pct - a.final_pct)[0];
+        const weak = [...attainment].sort((a,b) => a.final_pct - b.final_pct)[0];
+
+        document.getElementById("kpiTopCo").textContent = top.co;
+        document.getElementById("kpiTopVal").textContent = `${top.final_pct}%`;
+
+        document.getElementById("kpiWeakCo").textContent = weak.co;
+        const gap = (state.target - weak.final_pct).toFixed(1);
+        document.getElementById("kpiWeakVal").textContent = `${weak.final_pct}% (${gap > 0 ? '-' + gap : '+' + Math.abs(gap)}%)`;
+      }
+
+      document.getElementById("kpiAtRisk").textContent = summary.at_risk_count;
+      document.getElementById("tabStudentCount").textContent = summary.at_risk_count;
+    }
+
+    function renderCoChart() {
+      if (!state.attainmentData || !state.attainmentData.length) return;
+      const labels = state.attainmentData.map(d => d.co);
+      const values = state.attainmentData.map(d => d.final_pct);
+      const targetLines = state.attainmentData.map(() => state.target);
+
+      const bgColors = values.map(val => val >= state.target ? 'rgba(13, 148, 136, 0.85)' : 'rgba(225, 29, 72, 0.85)');
+      const borderColors = values.map(val => val >= state.target ? '#0f766e' : '#be123c');
+
+      const ctx = document.getElementById("coBarChart").getContext("2d");
+      if (coBarChart) coBarChart.destroy();
+
+      coBarChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              type: 'line',
+              label: `Target Line (${state.target}%)`,
+              data: targetLines,
+              borderColor: '#e11d48',
+              borderWidth: 2,
+              borderDash: [5, 5],
+              pointRadius: 0,
+              fill: false,
+              order: 1
+            },
+            {
+              type: 'bar',
+              label: 'Attainment (%)',
+              data: values,
+              backgroundColor: bgColors,
+              borderColor: borderColors,
+              borderWidth: 1.5,
+              borderRadius: 6,
+              order: 2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } }
+          },
+          scales: {
+            y: { min: 0, max: 100, ticks: { stepSize: 20 } },
+            x: { grid: { display: false } }
+          }
+        }
+      });
+
+      // Update pill summary below chart
+      const pillContainer = document.getElementById("coPillSummary");
+      pillContainer.innerHTML = state.attainmentData.map(item => {
+        const isMet = item.final_pct >= state.target;
+        return `
+          <div class="p-2 rounded-xl ${isMet ? 'bg-teal-50 border border-teal-100' : 'bg-rose-50 border border-rose-100'}">
+            <div class="font-bold text-navy-900">${item.co}</div>
+            <div class="text-[11px] font-mono font-bold ${isMet ? 'text-teal-700' : 'text-rose-700'}">${item.final_pct}%</div>
+            <div class="text-[9px] uppercase tracking-wider text-slate-500">${isMet ? 'Pass' : 'Deficit'}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderHeatmap(poData, attainmentData) {
+      const tbody = document.getElementById("matrixTableBody");
+      const tfoot = document.getElementById("matrixTableFoot");
+      if (!poData || !poData.matrix) return;
+
+      const coMap = {};
+      attainmentData.forEach(item => { coMap[item.co] = item; });
+
+      tbody.innerHTML = poData.matrix.map(row => {
+        const co = row.co;
+        const att = coMap[co] || { final_pct: 0, level: 0 };
+        const isMet = att.final_pct >= state.target;
+
+        function getCellClass(w) {
+          if (w === 3) return 'bg-teal-600 text-white font-bold';
+          if (w === 2) return 'bg-teal-200 text-teal-950 font-semibold';
+          if (w === 1) return 'bg-teal-50 text-teal-800';
+          return 'bg-slate-50 text-slate-300';
+        }
+
+        return `
+          <tr class="hover:bg-slate-50">
+            <td class="py-2 px-3 font-bold text-navy-900">${co}</td>
+            <td class="py-2 px-3 text-center font-mono font-semibold ${isMet ? 'text-teal-700' : 'text-rose-600'}">${att.final_pct}%</td>
+            <td class="py-2 px-3 text-center font-mono font-medium">L${att.level}</td>
+            <td class="py-2 px-3 text-center"><span class="inline-block px-2 py-0.5 rounded text-[11px] ${getCellClass(row.PO1)}">${row.PO1}</span></td>
+            <td class="py-2 px-3 text-center"><span class="inline-block px-2 py-0.5 rounded text-[11px] ${getCellClass(row.PO2)}">${row.PO2}</span></td>
+            <td class="py-2 px-3 text-center"><span class="inline-block px-2 py-0.5 rounded text-[11px] ${getCellClass(row.PO3)}">${row.PO3}</span></td>
+            <td class="py-2 px-3 text-center"><span class="inline-block px-2 py-0.5 rounded text-[11px] ${getCellClass(row.PO4)}">${row.PO4}</span></td>
+            <td class="py-2 px-3 text-center"><span class="inline-block px-2 py-0.5 rounded text-[11px] ${getCellClass(row.PO5)}">${row.PO5}</span></td>
+            <td class="py-2 px-3 text-center"><span class="inline-block px-2 py-0.5 rounded text-[11px] ${getCellClass(row.PO6)}">${row.PO6}</span></td>
+          </tr>
+        `;
+      }).join('');
+
+      const pos = poData.po_attainment;
+      const poList = ['PO1', 'PO2', 'PO3', 'PO4', 'PO5', 'PO6'];
+      tfoot.innerHTML = `
+        <tr class="bg-slate-100 text-navy-900">
+          <td class="py-2 px-3 font-bold">PO Attainment</td>
+          <td class="py-2 px-3 text-center text-slate-400 font-mono text-[10px]">&mdash;</td>
+          <td class="py-2 px-3 text-center text-slate-400 font-mono text-[10px]">&mdash;</td>
+          ${poList.map(p => {
+            const info = pos[p] || { percentage: 0 };
+            const isMet = info.percentage >= state.target;
+            return `<td class="py-2 px-3 text-center font-mono ${isMet ? 'text-teal-700 font-bold' : 'text-rose-600 font-bold'}">${info.percentage}%</td>`;
+          }).join('')}
+        </tr>
+      `;
+    }
+
+    async function loadActionPlan() {
+      const q = `threshold=${state.threshold}&target=${state.target}&w_direct=${state.w_direct}`;
+      try {
+        const res = await fetch(`/api/insights?${q}`).then(r => r.json());
+        const container = document.getElementById("actionCardsContainer");
+
+        container.innerHTML = res.co_insights.map(item => {
+          const isCritical = item.status === "BELOW_TARGET";
+          return `
+            <div class="bg-white rounded-2xl p-5 border ${isCritical ? 'border-rose-200 bg-rose-50/10' : 'border-slate-200'} shadow-sm">
+              <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                <div class="flex items-center space-x-2">
+                  <span class="w-7 h-7 rounded-lg ${isCritical ? 'bg-rose-600' : 'bg-teal-600'} text-white flex items-center justify-center font-bold text-xs">
+                    ${item.co}
+                  </span>
+                  <div>
+                    <h4 class="text-xs font-bold text-navy-900">${item.title}</h4>
+                    <p class="text-[11px] text-slate-400">Score: <strong>${item.attainment_pct}%</strong> (Target: ${item.target_pct}%) &bull; ${item.gap > 0 ? 'Deficit: -' + item.gap + '%' : 'Meeting Target'}</p>
+                  </div>
+                </div>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${isCritical ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}">
+                  ${isCritical ? 'High Priority' : 'On Track'}
+                </span>
+              </div>
+
+              ${isCritical ? `
+                <div class="mt-3 text-xs">
+                  <p class="text-slate-600 mb-2"><strong>Likely Bottleneck:</strong> ${item.likely_cause}</p>
+                  <div class="font-bold text-slate-700 mb-1.5 uppercase text-[10px] tracking-wider">3 Simple Actions to Fix:</div>
+                  <ul class="space-y-1 text-slate-700">
+                    ${item.actions.map(act => `<li class="flex items-start space-x-1.5"><span class="text-teal-600 font-bold">&check;</span><span>${act}</span></li>`).join('')}
+                  </ul>
+                </div>
+              ` : `
+                <div class="mt-2 text-xs text-emerald-700 font-medium">&check; ${item.praise}</div>
+              `}
+            </div>
+          `;
+        }).join('');
+        lucide.createIcons();
+      } catch (err) {
+        console.error("Action plan error:", err);
+      }
+    }
+
+    function renderStudentsTable() {
+      const tbody = document.getElementById("studentsTableBody");
+      const list = state.studentsList || [];
+      if (!list.length) {
+        tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-slate-400">All students are currently passing the threshold!</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = list.map(s => `
+        <tr class="hover:bg-slate-50">
+          <td class="py-2.5 px-3 font-semibold text-navy-900">${s.name}</td>
+          <td class="py-2.5 px-3 font-mono text-slate-500">${s.roll_no}</td>
+          <td class="py-2.5 px-3 text-center">
+            <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-rose-100 text-rose-700 font-bold text-xs font-mono">
+              ${s.weak_count}
+            </span>
+          </td>
+          <td class="py-2.5 px-3 text-rose-600 font-medium font-mono">${s.weak_cos.join(', ')}</td>
+          <td class="py-2.5 px-3 text-right font-mono font-bold">${s.avg_score}%</td>
+          <td class="py-2.5 px-3 text-center">
+            <button onclick="sendQuickPrompt('Help student ${s.name} in ${s.weak_cos.join(', ')}')" class="px-2 py-0.5 rounded text-[11px] font-semibold bg-teal-50 text-teal-700 hover:bg-teal-100 transition">
+              Guide
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function filterStudents() {
+      const q = document.getElementById("studentSearch").value.toLowerCase();
+      document.querySelectorAll("#studentsTableBody tr").forEach(r => {
+        r.style.display = r.textContent.toLowerCase().includes(q) ? "" : "none";
+      });
+    }
+
+    async function generateAiReport() {
+      const btn = document.getElementById("btnAiReport");
+      const orig = btn.innerHTML;
+      btn.innerHTML = `<span>Synthesizing...</span>`;
+      btn.disabled = true;
+      try {
+        const res = await fetch('/api/ai-report', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({threshold: state.threshold, target: state.target, w_direct: state.w_direct})
+        }).then(r => r.json());
+        document.getElementById("aiReportBox").classList.remove("hidden");
+        document.getElementById("reportContent").innerHTML = marked.parse(res.report);
+        showToast("Executive evaluation report synthesized!");
+      } catch (err) {
+        showToast("Failed to generate report.");
+      } finally {
+        btn.innerHTML = orig;
+        btn.disabled = false;
+      }
+    }
+
+    // Chat
+    async function handleChatSubmit(e) {
+      if (e) e.preventDefault();
+      const input = document.getElementById("chatInput");
+      const q = input.value.trim();
+      if (!q) return;
+      input.value = "";
+      await executeChatQuery(q);
+    }
+    function sendQuickPrompt(txt) {
+      switchTab('chat');
+      executeChatQuery(txt);
+    }
+    async function executeChatQuery(q) {
+      const msgBox = document.getElementById("chatMessages");
+      const userBubble = document.createElement("div");
+      userBubble.className = "flex items-start justify-end space-x-2";
+      userBubble.innerHTML = `<div class="bg-teal-600 text-white rounded-xl rounded-tr-none p-2.5 shadow-sm text-xs max-w-md">${q}</div>`;
+      msgBox.appendChild(userBubble);
+      msgBox.scrollTop = msgBox.scrollHeight;
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({question: q, threshold: state.threshold, target: state.target, w_direct: state.w_direct})
+        }).then(r => r.json());
+
+        const botBubble = document.createElement("div");
+        botBubble.className = "flex items-start space-x-2.5";
+        botBubble.innerHTML = `
+          <div class="w-6 h-6 rounded-full bg-teal-600 text-white flex-shrink-0 flex items-center justify-center text-[10px] font-bold">AI</div>
+          <div class="bg-white border border-slate-200 rounded-xl rounded-tl-none p-3 shadow-sm max-w-lg text-slate-700 leading-relaxed text-xs prose prose-sm">
+            ${marked.parse(res.answer)}
+          </div>
+        `;
+        msgBox.appendChild(botBubble);
+      } catch (err) {
+        console.error(err);
+      }
+      msgBox.scrollTop = msgBox.scrollHeight;
+    }
+
+    function clearChat() {
+      document.getElementById("chatMessages").innerHTML = `
+        <div class="flex items-start space-x-2.5">
+          <div class="w-6 h-6 rounded-full bg-teal-600 text-white flex-shrink-0 flex items-center justify-center text-[10px] font-bold">AI</div>
+          <div class="bg-white border border-slate-200 rounded-xl rounded-tl-none p-3 shadow-sm max-w-lg text-slate-700 leading-relaxed text-xs">
+            Conversation cleared. Ask any question about your marks data!
+          </div>
+        </div>
+      `;
+    }
+
+    async function regenerateData() {
+      try {
+        await fetch('/api/regenerate', {method: 'POST'});
+        document.getElementById("fileStatusText").innerHTML = `Currently analyzing: <strong>Sample Benchmark Cohort (60 Students, 1200 records)</strong>`;
+        showToast("Demo dataset restored!");
+        await refreshAll();
+      } catch (err) {
+        showToast("Failed to reset demo data.");
+      }
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById("toast");
+      document.getElementById("toastMsg").textContent = msg;
+      toast.classList.remove("translate-y-20", "opacity-0");
+      setTimeout(() => { toast.classList.add("translate-y-20", "opacity-0"); }, 3500);
+    }
+  </script>
+</body>
+</html>
